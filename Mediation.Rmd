@@ -1,0 +1,379 @@
+---
+title: "Mediation"
+author: "Emily Forgo"
+date: "7/30/2021"
+output: word_document
+---
+
+############################################################################
+############################################################################
+*R Lesson 11: Mediation*
+############################################################################
+############################################################################
+
+*Learning Outcomes:*
+In this lesson, we will be learning how to:
+1) Assess whether our data meets the assumptions for a mediation analysis.
+2) Know the steps of a Baron and Kenny mediation analysis.
+3) Conduct a mediation analysis.
+4) Interpret the results of our mediation analysis.
+
+
+
+
+
+############################################################################
+*Installing Packages*
+All the packages we will be using for this lesson are either in base R or are in packages we have already installed, so we do not need to install any packages for this lesson.
+
+*Loading Libraries*
+Here is our list of common packages to load so far. This list will grow as we move through future lessons.
+```{r}
+library(DescTools)
+library(psych)
+library(ggplot2)
+library(dplyr)
+library(car)
+library(effectsize)
+library(RcmdrMisc)
+library(tidyverse)
+library(rstatix)
+library(ggpubr)
+```
+
+############################################################################
+
+
+
+
+
+
+
+############################################################################
+*Dataset Information*
+
+In this module, we will be using the dataset PSYC300_dataset.csv.
+- Make sure that you have downloaded this dataset before following along to this file and the accompanying videos.
+*Make sure that you have downloaded the file to your Virtual Desktop and NOT your personal computer. Refer to the Setting Up Files in Your Virtual Desktop video if you need a reminder regarding how to do this.*
+
+- To upload our .csv file, we will put the path of the PSYC300_dataset dataset into the parentheses of our read.csv function. I also gave the dataset a name by calling it student.dat before the <-. The <- shows that the read.csv function belongs with that name.
+- Note: If you do not know the path name of your file, the file.choose() function can show you the path. Just type file.choose() and run that line and you can select the file you want. It will then show you the path of the file that you can copy and paste.
+- *IMPORTANT:* Make sure to delete or comment (by placing a # in front of) the file.choose() before you knit your file, just like with install.packages() or else your file will not knit.
+
+*Load Dataset into R*
+
+```{r}
+student.dat <- read.csv("/Users/emilyforgo/Desktop/PSYC300_dataset.csv")
+```
+
+This dataset has information about multiple student exam scores and some variables that might impact those exam scores.
+*For more information on this dataset, please refer to the "Dataset Key" Excel file.*
+
+These are the following variables in the dataset and how they are coded:
+1) examScore - A student's score on an exam from 1-100. This is a continuous variable.
+
+2) examLetter - The student's score on the exam converted into a letter grade where 90-100=A, 80-89=B, 70-79=C, and 60-69=D. This is a discrete variable that is ordinal.
+
+3) pass_fail - Whether the student passed or failed the exam where 1=passed and 0=failed. In this dataset, students needed to score a 75 or higher to pass. This is a discrete variable that is dichotomous.
+
+4) minSleep - The number of minutes of sleep the student got the night before the exam. This is a continuous variable.
+
+5) motivation - The student's level of motivation from 1-10. Students were asked to rate motivation on a scale from 1-10. This is a discrete variable that is ordinal.
+
+6) noteModality - How the student took notes for the exam, where 1=on paper and 2=by computer. This is a discrete variable.
+
+7) paperScore - The student's score on an exam after taking notes by paper. This is a continuous variable.
+
+8) computerScore - The student's score on an exam after taking notes on a computer. This is a continuous variable.
+
+9) statAnxiety - The student's level of statistics anxiety, measured as low, medium, or high, where 1=low, 2=medium, and 3=high. This is a discrete variable.
+
+10) exam1 - The student's score on a pre-class knowledge test. This is a continuous variable.
+
+11) exam2 - The student's score on a midterm knowledge test. This is a continuous variable.
+
+13) exam3 - The student's score on an end of semester knowledge test. This is a continuous variable.
+
+Let's take a look at our data before we begin analyses.
+```{r}
+summary(student.dat)
+#View(student.dat)
+
+student.dat$noteModality <- as.factor(student.dat$noteModality)
+class(student.dat$noteModality)
+levels(student.dat$noteModality)
+
+```
+
+
+############################################################################
+
+
+
+
+
+############################################################################
+############################################################################
+Part 1: Baron and Kenny
+############################################################################
+############################################################################
+There are multiple ways to conduct a mediation analysis, in this lesson we will be using the steps proposed by Baron and Kenny (1986). This method is considered the original mediation analysis.
+
+
+While Baron and Kenny's method has been considered fundamental to mediation analyses, it has also had it's critiques -- largely due to the fact that it uses cross-sectional data (Cole & Maxwell, 2003; Maxwell & Cole, 2007). There are newer methods, including structural equation modeling (Hayes, 2009), that have become popular for conducting mediation analyses, but other methods like the Sobel test and bootstrapping are popular as well. 
+
+
+New methods and resources for conducting mediation analyses are still being developed as well! Check out this cool tool for doing mediation analyses in R (as well other statistical analysis programs like SPSS and SAS) here: https://www.processmacro.org/index.html
+
+
+While there are still some critiques of Baron and Kenny's 1986 model and alternative methods have been proposed since, this method is still a great way to understand the fundamentals of what is happening in mediation -- so that is why we will be using this method in this lesson!
+
+
+You can find out more about Baron and Kenny's original mediation analyses at this citation here:
+Baron, R. M., & Kenny, D. A. (1986). The moderator-mediator variable distinction in social psychological research: Conceptual, strategic, and statistical considerations. Journal of Personality and Social Psychology, 51, 1173-1182.
+
+And you can read more about critiques of  Baron and Kenny's original mediation analyses in the following references:
+Critiques:
+- Cole, D. A. & Maxwell, S. E. (2003). Testing meditational models with longitudinal data: Questions and tips in the use of structural equation modeling. Journal of Abnormal Psychology, 112(4), 558-577.
+- Maxwell, S. E. & Cole, D. A. (2007). Bias in cross-sectional analyses of longitudinal mediation. Psychological Methods, 12(1), 23-44.
+
+
+New Methods:
+- Hayes, 2009: https://www.ln.edu.hk/mkt/staff/gcui/Hayes2009.pdf
+
+
+
+
+
+############################################################################
+############################################################################
+Part 2: Baron and Kenny Mediation Steps
+############################################################################
+############################################################################
+- In a mediation analysis, we are examining whether the effect of our independent/predictor variable on our outcome variable operates through a third variable, the mediator.
+- There are a couple different ways to run a mediation analysis, in this lesson we will use the method proposed by Baron and Kenny.
+- We will be conducting two simple linear regressions and a multiple regression to conduct this analysis.
+
+- This method has four steps:
+*Step 1*
+- Does our independent/predictor variable predict our outcome variable?
+- This gives us path c of our mediation model, or our direct effect.
+- lm(y~x)
+
+*Step 2*
+- Does our independent/predictor variable predict our mediator?
+- This gives us path a of our mediation model.
+- lm(m~x)
+
+*Step 3*
+- Does our mediator variable predict our outcome variable when the independent/predictor variable is taken into account?
+- This gives us path b and c' of our mediation model.
+- lm(y~x+m)
+
+*Step 4*
+- Do we have total or partial mediation?
+- Total (or full) mediation is when the independent/predictor variable no longer predicts the outcome variable after the mediator have been controlled for.
+- Partial mediation is when the path from our independent/predictor to our outcome variable is reduced but not 0 when the mediator is introduced.
+- If c' is zero then there is total mediation, if c' is not zero then there is partial mediation.
+
+- When interpreting results in R, if the results from our independent/predictor variable in step 3 is significant, this indicates partial mediation.
+- If the results of our independent/predictor variable in step 3 is not significant, this indicates total (or full) mediation.
+
+
+
+*Indirect Effect*
+path a * path b
+
+*Direct Effect*
+path c
+
+*Total Effect*
+Indirect Effect + Direct Effect
+
+Here is a link to an image showing the ways these paths are related if you would like a visual example:
+https://upload.wikimedia.org/wikipedia/commons/b/bc/Mediation_Model.png
+
+
+
+
+
+############################################################################
+############################################################################
+Part 3: Research Question and Hypotheses
+############################################################################
+############################################################################
+*Question*
+Suppose we were interested in examining the relationship between note taking modality, minutes of sleep the night before the exam, and exam score. 
+- We think that taking notes by hand takes longer than taking notes on a computer, which means that the students taking notes by hand might get less sleep the night before the exam, and that this will then impact their exam scores.
+- This means that we want to see if the relationship between note taking modality and exam score is mediated by the number of minutes of sleep the student got the night before the exam.
+- This is something that we can use a mediation analysis to answer!
+
+
+Check out Figure 1 in the textbook for a chart of what our research question looks like visually!
+
+
+
+*Hypotheses*
+Null: The relationship between note taking modality and exam score is not mediated by numbers of minutes of sleep the night before the exam.
+Alternative: The relationship between note taking modality and exam score is mediated by number of minutes of sleep the night before the exam.
+
+
+
+
+
+############################################################################
+############################################################################
+Part 4: Mediation Analysis and Interpretation
+############################################################################
+############################################################################
+
+Before we proceed with our mediation analyses, it should be noted that our independent/predictor variable is a discrete variable, and as such we have turned it into a factor so R knows to treat it as a discrete variable. This means that R will be dummy coding our variable when we conduct our analyses.
+- The fact that the independent/predictor variable is dummy coded will not change much since we are looking for statistical significance at each  of our mediation steps when conducting a mediation analysis.
+- Even so, here is the overview of dummy coding that we discussed in the previous multiple regression lesson, as a reminder for when we're going through our mediation results:
+
+*IMPORTANT!* What is dummy coding and how does it affect how I interpret my results?
+- Before we can interpret our results, we have to discuss what dummy coding is and how it impacts our interpretations.
+- R treats continuous variables and discrete variables differently when conducting regressions.
+- For continuous variables, the interpretation is the same as we did for our simple linear regression example.
+- However, for discrete variables, R defaults to doing something called dummy coding when using the lm() function (so whenever we run a regression).
+
+- Dummy coding will make the first level (or group) in a factor the control group.
+- This means that the regression results, are in *reference* to the control group.
+
+- So say for example we had output where we saw that noteModality was being called noteModality2.  That would be because it is telling us the level that the results were for is level 2 or computer notes. If we had called each level paper and computer instead of 1 and 2, this result would be called noteModalityComputer.
+- R picked the first level of noteModality (1, meaning by hand) as the reference group.
+- This means that the results of noteModality2, are directly comparing computer to paper.
+
+
+R defaults to make the first level/group the control. If you needed another level/group to be the reference, you could relevel the groups and rerun the analysis. We will not be doing this but this is the code to do so in case you're curious.
+```{r}
+# groupReorder is the new variable you would create that has the reordered group
+# group is the original group you are reordering
+# the "2" specifies what level you now want to be the reference
+# data$groupReorder <- relevel(data$group, "2")
+```
+In the code above, if the level order for the group variable was 1, 2, 3, this code would change it to 2, 1, 3. The 2 level would now be first.
+
+
+
+
+
+*Step 1:*
+Is the independent/predictor variable significantly related to the outcome variable?
+```{r}
+step1 <- lm(examScore~noteModality, data=student.dat)
+summary(step1)
+
+# noteModality2 coeffificent = -9.267
+# noteModality2 t-statistic = -5.40
+# noteModality2 p-value = 5.59e-07
+```
+The p-value for noteModality2 is statistically significant. This means that we have for support for step 1 (path c)!
+
+
+
+
+*Step 2:*
+Is the independent/predictor variable significantly related to the mediator?
+```{r}
+step2 <- lm(minSleep~noteModality, data=student.dat)
+summary(step2)
+
+# noteModality2 coefficient = -137.53
+# noteModality2 t-statistic = -6.759
+# noteModality2 p-value = 1.46e-09
+```
+The p-value for noteModality2 is statistically significant. This means that we have support for support for step 2 (path a)!
+
+
+
+
+*Step 3 & 4:*
+Is the mediator significantly related to the outcome variable, even when the independent/predictor variable is taken into account?
+```{r}
+step34 <- lm(examScore~noteModality+minSleep, data=student.dat)
+summary(step34)
+
+# noteModality2 coefficient = -8.89
+# noteModality2 t-statistic = -4.186
+# noteModality2 p-value = 6.78e-05
+
+# minSleep coefficient = 0.002674
+# minSleep t-statistic = 0.296
+# minSleep p-value = 0.768
+```
+The p-value for minSleep is not statistically significant. This means that we do *not* have support for step 3 (path b). We cannot say that we have mediation.
+
+The p-value for noteModality2 is statistically significant, this means that is we had had support for path b, we would have said we had partial mediation.
+
+
+
+
+*Interpreting Mediation Results*
+There are three very clear results that you can have for mediation:
+1) Steps 1, 2, 3, 4 are all not significant
+- This would very clearly indicate that you do not have mediation within your results.
+
+2) Steps 1, 2, and 3 are significant but not step 4
+- This would indicate that you have mediation within your results, specifically you have total (or full) mediation.
+
+3) Steps 1, 2, 3, and 4 are all significant
+- This would indicate that you have mediation within your results, specifically you have partial mediation.
+
+
+If our data does not meet one of the three options listed above, that means that our results do not fit one of the possible clear mediation results, and thus are more ambiguous and up for interpretation.
+- In this case, our data does not meet one of those three options, and is open for researcher interpretation.
+
+
+We have support for steps 1, 2, and 4, but not step 3. What does this mean?
+- This means that our independent/predictor variable (noteModality) was related to our outcome variable (examScore).
+- Our independent/predictor variable (noteModality) also was related to our mediator variable (minSleep.)
+- However, our mediator variable (minSleep) was *not* related to our outcome variable (examScore).
+- We did find that our independent/predictor (noteModality) was still significant, even within the model that included our mediator (minSleep), so if minSleep had been significant, that would have been evidence of partial mediation.
+- However, minSleep was not significant, so we do not have support for step 3. This means that we do not have support for mediation.
+
+
+
+How might we explain this result?
+- Note modality was a really strong predictor of exam score.
+- It is likely that note modality was such a strong predictor of exam score that it predicted exam score above and beyond the effect that minutes of sleep the night before the exam had on exam score.
+- If note taking modality predicts exam score all by itself, then it makes sense that we would not find that it was mediated by minutes of sleep the night before the exam!
+
+
+*A Note of Caution about Interpreting Baron and Kenny Results*
+- The Baron and Kenny mediation method uses cross-sectional data when trying to assess a causal chain, meaning all variables are measured at one time.
+- When all variables are measured at one time, our results have the same directionality problem that correlation has (for example, does the amount of sleep a student get influence their exam score or does their exam score influence their amount of sleep).
+- We run the risk of using cross-sectional data for variables that may need more time to change (like the mediator).
+- It might be better to use more sophisticated statistics available for assessing these links, like structural equation modeling.
+
+
+
+
+############################################################################
+############################################################################
+Part 5: Final Write Up
+############################################################################
+############################################################################
+Now we have run all the analyses and gotten all the info that we need to write up our results. Here is an example of what this write up might look like from the information above.
+
+Note taking modality was found to significantly predict exam score, b=-9.267, t=-5.40, p<0.001. Additionally, note taking modality also significantly predicted the number of minutes of sleep the night before the exam, b=-137.53, t=-6.759, p<0.001. Number of minutes of sleep the night before the exam was not a statistically significant predictor of exam score when note taking modality was taken into account, b=0.002674, t=0.296, p=0.768, however, within this model note taking modality was still found to be a statistically significant predictor of exam score, b=-8.89. t=-4.186, p<0.001, which would have indicated partial mediation had the number of minutes of sleep been found to be a significant predictor of exam score. The overall findings do not show support for number of minutes of sleep the night before the exam mediating the relationship between note taking modality and exam score.
+
+
+Now that we've interpreted and written up our results, check out figure 2 in the textbook for an updated chart of our research question -- now with the numbers for each path listed!
+
+
+
+
+
+############################################################################
+*Knitting your File*
+
+- Make sure you rename your file before knitting and submitting it.
+  - You can do this by going to File > Save As
+  - The file name should follow this format: ASSIGNMENT_LASTNAME.filetype
+  
+- File type
+  - You can change the way the file knits by editing "output: word_document" at the top of the document
+  - output: word_document = knits as a word document
+  - output: html_document = knits as an html document
+  - You should change the way in your which your file knits to be in line with whatever is required for the assignment.
