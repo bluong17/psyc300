@@ -26,6 +26,8 @@ In this lesson, we will be learning how to:
 *Installing Packages*
 All the packages we will be using for this lesson are either in base R or are in packages we have already installed, so we do not need to install any packages for this lesson.
 
+pip install -r requirements.txt
+
 *Loading Libraries*
 Here is our list of common packages to load so far. This list will grow as we move through future lessons.
 ```{r}
