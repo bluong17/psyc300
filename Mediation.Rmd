@@ -30,16 +30,7 @@ All the packages we will be using for this lesson are either in base R or are in
 *Loading Libraries*
 Here is our list of common packages to load so far. This list will grow as we move through future lessons.
 ```{r}
-library(DescTools)
-library(psych)
-library(ggplot2)
-library(dplyr)
-library(car)
-library(effectsize)
-library(RcmdrMisc)
-library(tidyverse)
-library(rstatix)
-library(ggpubr)
+
 ```
 
 ############################################################################
