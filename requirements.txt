@@ -1,0 +1,10 @@
+Desctools
+psych
+ggplot2
+dplyr
+car
+effectsize
+RcmdrMisc
+tidyverse
+rstatix
+ggpubr
