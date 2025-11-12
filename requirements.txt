@@ -8,3 +8,4 @@ RcmdrMisc
 tidyverse
 rstatix
 ggpubr
+pip install -r requirements.txt
