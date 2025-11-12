@@ -1,4 +1,4 @@
-Desctools
+DescTools
 psych
 ggplot2
 dplyr
