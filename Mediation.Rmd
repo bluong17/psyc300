@@ -31,7 +31,7 @@ pip install -r requirements.txt
 *Loading Libraries*
 Here is our list of common packages to load so far. This list will grow as we move through future lessons.
 ```{r}
-
+library(DescTools)
 library(psych)
 library(ggplot2)
 library(dplyr)
